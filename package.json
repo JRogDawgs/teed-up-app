@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@react-native-community/datetimepicker": "^8.4.1",
+    "@types/lodash": "^4.17.17",
+    "expo-auth-session": "^6.1.5",
+    "expo-secure-store"
