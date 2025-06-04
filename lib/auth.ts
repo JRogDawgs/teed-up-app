@@ -1,45 +1,74 @@
-import { User } from '../types/user';
+import { GoogleAuthProvider, signInWithCredential, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { auth, db } from './firebase';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-// TODO: Replace with actual Firebase auth
-let currentUser: User | null = null;
+// Initialize WebBrowser for auth
+WebBrowser.maybeCompleteAuthSession();
 
-export const login = async (email: string, password: string): Promise<User> => {
-  // TODO: Implement Firebase authentication
-  currentUser = {
-    id: '1',
-    name: 'Test User',
-    email,
-    handicap: 10,
-    joinedAt: new Date().toISOString(),
-  };
-  return currentUser;
+// Configure Google OAuth
+const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+  clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+});
+
+export const signInWithGoogleAsync = async () => {
+  try {
+    const result = await promptAsync();
+    
+    if (result?.type === 'success') {
+      const { id_token } = result.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      const userCredential = await signInWithCredential(auth, credential);
+      
+      // Create or update user document
+      await createOrUpdateUser(userCredential.user);
+      
+      return userCredential.user;
+    }
+    
+    throw new Error('Google sign in was cancelled or failed');
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
+    throw error;
+  }
 };
 
-export const signup = async (email: string, password: string, name: string): Promise<User> => {
-  // TODO: Implement Firebase signup
-  currentUser = {
-    id: '1',
-    name,
-    email,
-    handicap: 0,
-    joinedAt: new Date().toISOString(),
-  };
-  return currentUser;
+export const signOut = async () => {
+  try {
+    await firebaseSignOut(auth);
+  } catch (error) {
+    console.error('Error signing out:', error);
+    throw error;
+  }
 };
 
-export const logout = async (): Promise<void> => {
-  // TODO: Implement Firebase logout
-  currentUser = null;
+export const getCurrentUser = (): User | null => {
+  return auth.currentUser;
 };
 
-export const getCurrentUser = async (): Promise<User | null> => {
-  // TODO: Implement Firebase current user check
-  return currentUser;
-};
-
-export const updateProfile = async (updates: Partial<User>): Promise<User> => {
-  // TODO: Implement Firebase profile update
-  if (!currentUser) throw new Error('No user logged in');
-  currentUser = { ...currentUser, ...updates };
-  return currentUser;
+// Helper function to create or update user document
+const createOrUpdateUser = async (user: User) => {
+  const userRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists()) {
+    // Create new user document
+    await setDoc(userRef, {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      createdAt: new Date().toISOString(),
+    });
+  } else {
+    // Update existing user document
+    await setDoc(userRef, {
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+    }, { merge: true });
+  }
 }; 
