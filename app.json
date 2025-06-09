@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Tee'd Up",
+    "slug": "teed-up",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.teedup.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.teedup.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "teed-up",
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "sdkVersion": "53.0.0"
+  }
+} 
